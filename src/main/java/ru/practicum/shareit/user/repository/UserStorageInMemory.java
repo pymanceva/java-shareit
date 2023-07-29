@@ -1,10 +1,10 @@
-package ru.practicum.shareit.user.storage;
+package ru.practicum.shareit.user.repository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.exception.EmailNotUniqueException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
@@ -26,7 +26,7 @@ public class UserStorageInMemory implements UserStorage {
             log.info("User with id " + user.getId() + " has been added.");
         } else {
             log.error("User with email " + user.getEmail() + " already exists.");
-            throw new EmailNotUniqueException("User with email " + user.getEmail() + " already exists.");
+            throw new ValidationException("User with email " + user.getEmail() + " already exists.");
         }
         return user;
     }
@@ -47,7 +47,7 @@ public class UserStorageInMemory implements UserStorage {
             } else if (!user.getEmail().equals(existed.getEmail())) {
                 if (!this.isEmailUnique(user.getEmail())) {
                     log.error("User with email " + users.get(id).getEmail() + " already exists.");
-                    throw new EmailNotUniqueException("User with email " + users.get(id).getEmail() + " already exists.");
+                    throw new ValidationException("User with email " + users.get(id).getEmail() + " already exists.");
                 }
             }
             user.setId(existed.getId());
