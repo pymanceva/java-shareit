@@ -12,6 +12,9 @@ import ru.practicum.shareit.user.model.User;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class BookingMapper {
     public static BookingOutgoingDto mapToBookingOutgoingDto(Booking booking) {
         BookingOutgoingDto bookingOutGoingDto = new BookingOutgoingDto();

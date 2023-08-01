@@ -7,6 +7,7 @@ import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "comments")
@@ -34,4 +35,17 @@ public class Comment {
 
     @Column(name = "comment_created")
     private LocalDateTime created;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Comment)) return false;
+        Comment comment = (Comment) o;
+        return getText().equals(comment.getText()) && getItem().equals(comment.getItem()) && getAuthor().equals(comment.getAuthor()) && getCreated().equals(comment.getCreated());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getText(), getItem(), getAuthor(), getCreated());
+    }
 }

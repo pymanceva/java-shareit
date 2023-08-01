@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -48,6 +50,7 @@ public class ItemServiceImpl implements ItemService {
 
         try {
             itemRepository.save(item);
+            log.info("New item id " + item.getId() + " has been saved.");
             return ItemMapper.mapToItemDto(item);
         } catch (DataIntegrityViolationException e) {
             throw new NotSavedException("Item was not save " + itemDto);
@@ -77,6 +80,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         try {
+            log.info("Existed item id " + item.getId() + " has been updated.");
             return ItemMapper.mapToItemDto(itemRepository.save(item));
         } catch (DataIntegrityViolationException e) {
             throw new NotSavedException("Item was not update " + itemDto);
@@ -87,13 +91,14 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public void delete(Long itemId) {
         itemRepository.deleteById(itemId);
+        log.info("Existed item id " + itemId + " has been deleted.");
     }
 
     @Transactional(readOnly = true)
     @Override
     public Collection<ItemDto> getAllByUserId(Long userId) {
         Collection<Item> items = itemRepository.findAllByOwnerId(userId, Sort.by(Sort.Direction.ASC, "id"));
-
+        log.info("List of all items of user id " + userId + " has been gotten.");
         return items.stream()
                 .map(item -> getById(item.getId(), userId))
                 .collect(Collectors.toList());
@@ -108,7 +113,7 @@ public class ItemServiceImpl implements ItemService {
         if (!item.getOwner().getId().equals(userId)) {
             throw new NotOwnerException("Item id " + itemId + " does not belong to user id " + userId);
         }
-
+        log.info("Item id " + itemId + " of user id " + userId + " has been gotten.");
         return ItemMapper.mapToItemDto(item);
     }
 
@@ -129,7 +134,7 @@ public class ItemServiceImpl implements ItemService {
             nextBooking = bookingRepository.findFirstByItemIdAndStatusAndStartIsAfterOrderByStartAsc(
                     itemId, BookingStatus.APPROVED, LocalDateTime.now());
         }
-
+        log.info("Item id " + itemId + " of user id " + userId + " has been gotten.");
         return ItemMapper.mapToItemDtoForOwner(item, lastBooking, nextBooking, comments);
     }
 
@@ -137,8 +142,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Collection<ItemDto> search(String text) {
         if (text.isBlank()) {
+            log.info("Search result is empty.");
             return new ArrayList<>();
         } else {
+            log.info("Search result has been gotten.");
             return ItemMapper.mapToItemDto(itemRepository.search(text));
         }
     }
@@ -164,6 +171,9 @@ public class ItemServiceImpl implements ItemService {
         comment.setItem(item);
 
         try {
+            log.info("New comment id " + comment.getId() +
+                    " for item id " + itemId +
+                    " from user id " + userId + " has been added");
             return CommentMapper.mapToCommentDto(commentRepository.save(comment));
         } catch (DataIntegrityViolationException e) {
             throw new NotSavedException("Comment was not created.");

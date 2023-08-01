@@ -1,6 +1,8 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingIncomingDto;
@@ -10,10 +12,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingRequestState;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.exception.NotAvailableException;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.NotSupportedStatusException;
-import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -24,6 +23,7 @@ import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
@@ -53,7 +53,13 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = BookingMapper.mapToBooking(bookingIncomingDto, item, booker);
         booking.setStatus(BookingStatus.WAITING);
 
-        return BookingMapper.mapToBookingOutgoingDto(bookingRepository.save(booking));
+        try {
+            bookingRepository.save(booking);
+            log.info("New booking id " + booking.getId() + " has been saved.");
+            return BookingMapper.mapToBookingOutgoingDto(booking);
+        } catch (DataIntegrityViolationException e) {
+            throw new NotSavedException("Booking was not saved.");
+        }
     }
 
     @Transactional
@@ -74,7 +80,14 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
 
-        return BookingMapper.mapToBookingOutgoingDto(bookingRepository.save(booking));
+        try {
+            bookingRepository.save(booking);
+            log.info("Booking id " + booking.getId() + " has been answered by owner id " + userId +
+                    ". Reply: " + approved);
+            return BookingMapper.mapToBookingOutgoingDto(booking);
+        } catch (DataIntegrityViolationException e) {
+            throw new NotSavedException("Booking was not approved.");
+        }
     }
 
     @Transactional(readOnly = true)
@@ -87,32 +100,39 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Item id " + booking.getItem().getId() + " does not belong to user id " + userId);
         }
 
+        log.info("Booking id " + bookingId + " has been gotten.");
         return BookingMapper.mapToBookingOutgoingDto(booking);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Collection<BookingOutgoingDto> getAllByBookerId(Long bookerId, BookingRequestState state) {
-        User booker = userRepository.findById(bookerId).orElseThrow(() ->
+        userRepository.findById(bookerId).orElseThrow(() ->
                 new NotFoundException("User with id " + bookerId + " was not found."));
 
         switch (state) {
             case ALL:
+                log.info("All bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(bookingRepository.findAllByBookerIdOrderByEndDesc(bookerId));
             case CURRENT:
+                log.info("Current bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartAsc(
                                 bookerId, LocalDateTime.now(), LocalDateTime.now()));
             case PAST:
+                log.info("Past bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now()));
             case FUTURE:
+                log.info("Future bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now()));
             case WAITING:
+                log.info("Waiting bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING));
             case REJECTED:
+                log.info("Rejected bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED));
             default:
@@ -123,26 +143,32 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     @Override
     public Collection<BookingOutgoingDto> getAllByItemsOfUser(Long userId, BookingRequestState state) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
+        userRepository.findById(userId).orElseThrow(() ->
                 new NotFoundException("User with id " + userId + " was not found."));
 
         switch (state) {
             case ALL:
+                log.info("All bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(bookingRepository.findAllByItemOwnerIdOrderByEndDesc(userId));
             case CURRENT:
+                log.info("Current bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
                                 userId, LocalDateTime.now(), LocalDateTime.now()));
             case PAST:
+                log.info("Past bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now()));
             case FUTURE:
+                log.info("Future bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(userId, LocalDateTime.now()));
             case WAITING:
+                log.info("Waiting bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, BookingStatus.WAITING));
             case REJECTED:
+                log.info("Rejected bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, BookingStatus.REJECTED));
             default:

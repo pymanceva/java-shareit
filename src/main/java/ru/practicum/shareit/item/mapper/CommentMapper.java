@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class CommentMapper {
     public static CommentDto mapToCommentDto(Comment comment) {
         CommentDto commentDto = new CommentDto();

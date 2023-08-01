@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
@@ -23,6 +25,7 @@ public class UserServiceImpl implements UserService {
     public UserDto add(UserDto userDto) {
         try {
             User user = userRepository.save(UserMapper.mapToUser(userDto));
+            log.info("New user id " + user.getId() + " has been added.");
             return UserMapper.mapToUserDto(user);
         } catch (DataIntegrityViolationException e) {
             throw new NotSavedException("User was not save " + userDto);
@@ -43,23 +46,32 @@ public class UserServiceImpl implements UserService {
             user.setEmail(userDto.getEmail());
         }
 
-        return UserMapper.mapToUserDto(userRepository.save(user));
+        try {
+            log.info("Existed user id " + user.getId() + " has been updated.");
+            return UserMapper.mapToUserDto(userRepository.save(user));
+        } catch (DataIntegrityViolationException e) {
+            throw new NotSavedException("User was not save " + userDto);
+        }
     }
 
     @Transactional
     @Override
     public void delete(Long id) {
         userRepository.deleteById(id);
+        log.info("Existed user id " + id + " has been deleted.");
     }
 
     @Override
     public Collection<UserDto> getAll() {
+        log.info("List of all users has been gotten.");
         return UserMapper.mapToUserDto(userRepository.findAll());
     }
 
     @Override
     public UserDto getById(Long id) {
-        return UserMapper.mapToUserDto(userRepository.findById(id).orElseThrow(() ->
-                new NotFoundException("User id " + id + " is not found.")));
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("User id " + id + " is not found."));
+        log.info("User id " + id + " has been gotten.");
+        return UserMapper.mapToUserDto(user);
     }
 }

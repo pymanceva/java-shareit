@@ -10,7 +10,9 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class ItemMapper {
 
     public static ItemDto mapToItemDto(Item item) {
