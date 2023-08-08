@@ -1,10 +1,11 @@
-package ru.practicum.shareit.item.storage;
+package ru.practicum.shareit.item.repository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.*;
@@ -27,7 +28,7 @@ public class ItemStorageInMemory implements ItemStorage {
             throw new NotFoundException("User id " + userId + " does not exist.");
         }
         item.setId(++itemId);
-        item.setOwner(userService.getById(userId));
+        item.setOwner(UserMapper.mapToUser(userService.getById(userId)));
         List<Item> itemsOfUser = new ArrayList<>();
         if (itemsByUsers.containsKey(userId)) {
             itemsOfUser = itemsByUsers.get(userId);

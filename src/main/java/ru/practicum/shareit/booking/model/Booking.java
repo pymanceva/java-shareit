@@ -1,17 +1,56 @@
 package ru.practicum.shareit.booking.model;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-@Data
+@Entity
+@Table(name = "bookings")
+@Getter
+@Setter
+@ToString
 public class Booking {
-    private Long itemId;
+    @Id
+    @Column(name = "booking_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "booking_start")
     private LocalDateTime start;
+
+    @Column(name = "booking_end")
     private LocalDateTime end;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_id")
+    @ToString.Exclude
     private Item item;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booker_id")
+    @ToString.Exclude
     private User booker;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "booking_status")
     private BookingStatus status;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Booking)) return false;
+        Booking booking = (Booking) o;
+        return Objects.equals(getStart(), booking.getStart()) && Objects.equals(getEnd(), booking.getEnd()) && Objects.equals(getItem(), booking.getItem()) && Objects.equals(getBooker(), booking.getBooker()) && getStatus() == booking.getStatus();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getStart(), getEnd(), getItem(), getBooker(), getStatus());
+    }
 }

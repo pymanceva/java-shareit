@@ -1,4 +1,4 @@
-package ru.practicum.shareit.item.storage;
+package ru.practicum.shareit.item.repository;
 
 import ru.practicum.shareit.item.model.Item;
 
@@ -13,7 +13,7 @@ public interface ItemStorage {
 
     Collection<Item> getAllByUserId(Long userId);
 
-    Item getByOwnerIdAndItemId(Long ownerId, Long itemId);
+    Item getByOwnerIdAndItemId(Long ownerId, Long id);
 
     Item getById(Long itemId);
 
