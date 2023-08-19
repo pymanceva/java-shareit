@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS items CASCADE;
 DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS comments CASCADE;
+DROP TABLE IF EXISTS requests CASCADE;
 
 CREATE TABLE IF NOT EXISTS users (
 user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -10,13 +11,23 @@ email VARCHAR(320) NOT NULL,
 CONSTRAINT UQ_USER_EMAIL UNIQUE (email)
 );
 
+CREATE TABLE IF NOT EXISTS requests (
+request_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+request_description VARCHAR NOT NULL,
+requester_id BIGINT,
+request_created TIMESTAMP NOT NULL,
+CONSTRAINT fk_users_to_requests FOREIGN KEY(requester_id) REFERENCES users(user_id) ON UPDATE RESTRICT ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS items (
 item_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 item_name VARCHAR(200) NOT NULL,
 item_description VARCHAR NOT NULL,
 is_available bool NOT NULL,
 owner_id BIGINT NOT NULL,
-CONSTRAINT fk_items_to_users FOREIGN KEY(owner_id) REFERENCES users(user_id)
+request_id BIGINT,
+CONSTRAINT fk_items_to_users FOREIGN KEY(owner_id) REFERENCES users(user_id) ON UPDATE RESTRICT ON DELETE CASCADE,
+CONSTRAINT fk_items_to_requests FOREIGN KEY(request_id) REFERENCES requests(request_id) ON UPDATE RESTRICT ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
@@ -26,8 +37,8 @@ booking_end TIMESTAMP NOT NULL,
 item_id BIGINT,
 booker_id BIGINT,
 booking_status VARCHAR NOT NULL,
-CONSTRAINT fk_items_to_bookings FOREIGN KEY(item_id) REFERENCES items(item_id),
-CONSTRAINT fk_users_to_bookings FOREIGN KEY(booker_id) REFERENCES users(user_id)
+CONSTRAINT fk_items_to_bookings FOREIGN KEY(item_id) REFERENCES items(item_id) ON UPDATE RESTRICT ON DELETE CASCADE,
+CONSTRAINT fk_users_to_bookings FOREIGN KEY(booker_id) REFERENCES users(user_id) ON UPDATE RESTRICT ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS comments (
@@ -36,6 +47,6 @@ comment_text VARCHAR NOT NULL,
 item_id BIGINT,
 author_id BIGINT,
 comment_created TIMESTAMP NOT NULL,
-CONSTRAINT fk_items_to_comments FOREIGN KEY(item_id) REFERENCES items(item_id),
-CONSTRAINT fk_users_to_comments FOREIGN KEY(author_id) REFERENCES users(user_id)
+CONSTRAINT fk_items_to_comments FOREIGN KEY(item_id) REFERENCES items(item_id) ON UPDATE RESTRICT ON DELETE CASCADE,
+CONSTRAINT fk_users_to_comments FOREIGN KEY(author_id) REFERENCES users(user_id) ON UPDATE RESTRICT ON DELETE CASCADE
 );

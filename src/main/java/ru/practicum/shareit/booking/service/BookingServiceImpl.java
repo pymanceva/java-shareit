@@ -3,6 +3,8 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingIncomingDto;
@@ -106,35 +108,37 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(readOnly = true)
     @Override
-    public Collection<BookingOutgoingDto> getAllByBookerId(Long bookerId, BookingRequestState state) {
+    public Collection<BookingOutgoingDto> getAllByBookerId(Long bookerId, BookingRequestState state, int from, int size) {
         userRepository.findById(bookerId).orElseThrow(() ->
                 new NotFoundException("User with id " + bookerId + " was not found."));
+
+        Pageable pageable = PageRequest.of(from / size, size);
 
         switch (state) {
             case ALL:
                 log.info("All bookings of booker id " + bookerId + " has been gotten.");
-                return BookingMapper.mapToBookingOutgoingDto(bookingRepository.findAllByBookerIdOrderByEndDesc(bookerId));
+                return BookingMapper.mapToBookingOutgoingDto(bookingRepository.findAllByBookerIdOrderByEndDesc(bookerId, pageable));
             case CURRENT:
                 log.info("Current bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartAsc(
-                                bookerId, LocalDateTime.now(), LocalDateTime.now()));
+                                bookerId, LocalDateTime.now(), LocalDateTime.now(), pageable));
             case PAST:
                 log.info("Past bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
-                        bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now()));
+                        bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now(), pageable));
             case FUTURE:
                 log.info("Future bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
-                        bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now()));
+                        bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now(), pageable));
             case WAITING:
                 log.info("Waiting bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
-                        bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING));
+                        bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING, pageable));
             case REJECTED:
                 log.info("Rejected bookings of booker id " + bookerId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
-                        bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED));
+                        bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED, pageable));
             default:
                 throw new NotSupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
         }
@@ -142,35 +146,37 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(readOnly = true)
     @Override
-    public Collection<BookingOutgoingDto> getAllByItemsOfUser(Long userId, BookingRequestState state) {
+    public Collection<BookingOutgoingDto> getAllByItemsOfUser(Long userId, BookingRequestState state, int from, int size) {
         userRepository.findById(userId).orElseThrow(() ->
                 new NotFoundException("User with id " + userId + " was not found."));
+
+        Pageable pageable = PageRequest.of(from / size, size);
 
         switch (state) {
             case ALL:
                 log.info("All bookings for items of owner id " + userId + " has been gotten.");
-                return BookingMapper.mapToBookingOutgoingDto(bookingRepository.findAllByItemOwnerIdOrderByEndDesc(userId));
+                return BookingMapper.mapToBookingOutgoingDto(bookingRepository.findAllByItemOwnerIdOrderByEndDesc(userId, pageable));
             case CURRENT:
                 log.info("Current bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
                         bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
-                                userId, LocalDateTime.now(), LocalDateTime.now()));
+                                userId, LocalDateTime.now(), LocalDateTime.now(), pageable));
             case PAST:
                 log.info("Past bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
-                        bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now()));
+                        bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now(), pageable));
             case FUTURE:
                 log.info("Future bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
-                        bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(userId, LocalDateTime.now()));
+                        bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(userId, LocalDateTime.now(), pageable));
             case WAITING:
                 log.info("Waiting bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
-                        bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, BookingStatus.WAITING));
+                        bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, BookingStatus.WAITING, pageable));
             case REJECTED:
                 log.info("Rejected bookings for items of owner id " + userId + " has been gotten.");
                 return BookingMapper.mapToBookingOutgoingDto(
-                        bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, BookingStatus.REJECTED));
+                        bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, BookingStatus.REJECTED, pageable));
             default:
                 throw new NotSupportedStatusException("Unknown state: " + state);
         }

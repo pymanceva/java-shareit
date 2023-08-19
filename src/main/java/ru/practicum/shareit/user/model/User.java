@@ -1,8 +1,6 @@
 package ru.practicum.shareit.user.model;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -12,6 +10,8 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
     @Id
     @Column(name = "user_id")

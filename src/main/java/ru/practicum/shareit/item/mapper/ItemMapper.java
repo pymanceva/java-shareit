@@ -1,16 +1,16 @@
 package ru.practicum.shareit.item.mapper;
 
+import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoForOwner;
+import ru.practicum.shareit.item.dto.ItemDtoWithBookings;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ItemMapper {
@@ -21,6 +21,9 @@ public class ItemMapper {
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
         itemDto.setAvailable(item.getAvailable());
+        if (item.getRequestId() != null) {
+            itemDto.setRequestId(item.getRequestId());
+        }
 
         return itemDto;
     }
@@ -33,24 +36,27 @@ public class ItemMapper {
         return dtos;
     }
 
-    public static ItemDtoForOwner mapToItemDtoForOwner(Item item,
-                                                       Booking lastBooking,
-                                                       Booking nextBooking,
-                                                       Collection<Comment> comments) {
-        ItemDtoForOwner itemDtoForOwner = new ItemDtoForOwner();
-        itemDtoForOwner.setId(item.getId());
-        itemDtoForOwner.setName(item.getName());
-        itemDtoForOwner.setDescription(item.getDescription());
-        itemDtoForOwner.setAvailable(item.getAvailable());
+    public static ItemDtoWithBookings mapToItemDtoForOwner(Item item,
+                                                           Booking lastBooking,
+                                                           Booking nextBooking,
+                                                           Collection<Comment> comments) {
+        ItemDtoWithBookings itemDtoWithBookings = new ItemDtoWithBookings();
+        itemDtoWithBookings.setId(item.getId());
+        itemDtoWithBookings.setName(item.getName());
+        itemDtoWithBookings.setDescription(item.getDescription());
+        itemDtoWithBookings.setAvailable(item.getAvailable());
         if (lastBooking != null) {
-            itemDtoForOwner.setLastBooking(BookingMapper.mapToBookingDtoForOwner(lastBooking));
+            itemDtoWithBookings.setLastBooking(BookingMapper.mapToBookingDtoForOwner(lastBooking));
         }
         if (nextBooking != null) {
-            itemDtoForOwner.setNextBooking(BookingMapper.mapToBookingDtoForOwner(nextBooking));
+            itemDtoWithBookings.setNextBooking(BookingMapper.mapToBookingDtoForOwner(nextBooking));
         }
-        itemDtoForOwner.setComments(CommentMapper.mapToCommentDto(comments));
+        if (item.getRequestId() != null) {
+            itemDtoWithBookings.setRequestId(item.getRequestId());
+        }
+        itemDtoWithBookings.setComments(CommentMapper.mapToCommentDto(comments));
 
-        return itemDtoForOwner;
+        return itemDtoWithBookings;
     }
 
     public static Item mapToItem(ItemDto itemDto) {
@@ -59,6 +65,7 @@ public class ItemMapper {
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
+        item.setRequestId(itemDto.getRequestId());
 
         return item;
     }
