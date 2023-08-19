@@ -53,7 +53,7 @@ public class RequestServiceImpl implements RequestService {
         Request request = requestRepository.findById(requestId).orElseThrow(() ->
                 new NotFoundException("Request id " + requestId + " was not found."));
 
-        if(request.getRequester().getId().equals(userId)) {
+        if (request.getRequester().getId().equals(userId)) {
             requestRepository.deleteById(requestId);
             log.info("Existed request id " + requestId + " has been deleted.");
         } else {
@@ -75,7 +75,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public Collection<RequestDto> getRequestsOfUser(Long userId) {
-       userRepository.findById(userId).orElseThrow(() ->
+        userRepository.findById(userId).orElseThrow(() ->
                 new NotFoundException("User id " + userId + " does not exist."));
 
         Collection<Request> requests = requestRepository
