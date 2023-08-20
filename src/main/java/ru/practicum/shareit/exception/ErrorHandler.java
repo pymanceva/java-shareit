@@ -29,13 +29,6 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlerEmailNotUniqueException(final ValidationException e) {
-        log.error(e.getMessage());
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleNotAvailableException(final NotAvailableException e) {
         log.error(e.getMessage());
         return new ErrorResponse(e.getMessage());

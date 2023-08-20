@@ -145,7 +145,7 @@ class BookingServiceImplTest {
 
         bookingIncomingDto.setStart(LocalDateTime.of(2099,1,1,0,0));
 
-        final ValidationException ex = assertThrows(ValidationException.class,
+        final NotAvailableException ex = assertThrows(NotAvailableException.class,
                 () -> bookingService.add(bookingIncomingDto, bookerDto.getId()));
 
         assertThat("End of booking must be after start.", equalTo(ex.getMessage()));

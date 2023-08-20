@@ -46,7 +46,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (!bookingIncomingDto.validate()) {
-            throw new ValidationException("End of booking must be after start.");
+            throw new NotAvailableException("End of booking must be after start.");
         }
 
         User booker = userRepository.findById(bookerId).orElseThrow(() ->
