@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.model;
 
 import lombok.*;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.util.Generated;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ public class Comment {
     @Column(name = "comment_created")
     private LocalDateTime created;
 
+    @Generated
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -44,6 +46,7 @@ public class Comment {
         return getText().equals(comment.getText()) && getItem().equals(comment.getItem()) && getAuthor().equals(comment.getAuthor()) && getCreated().equals(comment.getCreated());
     }
 
+    @Generated
     @Override
     public int hashCode() {
         return Objects.hash(getText(), getItem(), getAuthor(), getCreated());

@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user.model;
 
 import lombok.*;
+import ru.practicum.shareit.util.Generated;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -24,6 +25,7 @@ public class User {
     @Column(nullable = false)
     private String email;
 
+    @Generated
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -32,6 +34,7 @@ public class User {
         return getName().equals(user.getName()) && getEmail().equals(user.getEmail());
     }
 
+    @Generated
     @Override
     public int hashCode() {
         return Objects.hash(getName(), getEmail());
