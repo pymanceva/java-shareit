@@ -20,32 +20,32 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto add(@RequestBody @Valid UserDto userDto) {
-        log.info("Income request to add new user.");
+        log.info("POST/addUser");
         return userService.add(userDto);
     }
 
     @PatchMapping("/{id}")
     public UserDto update(@PathVariable long id, @RequestBody UserDto userDto) {
-        log.info("Income request to update existed user.");
+        log.info("PATCH/updateUser");
         return userService.update(id, userDto);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
-        log.info("Income request to delete existed user.");
+        log.info("DELETE/userId");
         userService.delete(id);
     }
 
     @GetMapping
     public Collection<UserDto> getAll() {
-        log.info("Income request to get all users.");
+        log.info("GET/get-All-Users");
         return userService.getAll();
     }
 
     @GetMapping("/{id}")
     public UserDto getById(@PathVariable long id) {
-        log.info("Income request to get user by id.");
+        log.info("GET/get-User-By-Id");
         return userService.getById(id);
     }
 

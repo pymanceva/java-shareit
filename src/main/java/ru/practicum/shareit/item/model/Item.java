@@ -1,9 +1,8 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.util.Generated;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -15,6 +14,8 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
 public class Item {
     @Id
     @Column(name = "item_id")
@@ -38,6 +39,10 @@ public class Item {
     @ToString.Exclude
     private User owner;
 
+    @Column(name = "request_id")
+    private Long requestId;
+
+    @Generated
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -46,6 +51,7 @@ public class Item {
         return getName().equals(item.getName()) && getOwner().equals(item.getOwner());
     }
 
+    @Generated
     @Override
     public int hashCode() {
         return Objects.hash(getName(), getOwner());

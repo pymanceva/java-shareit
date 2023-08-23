@@ -7,9 +7,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoWithBookings;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.Collection;
 
 @RestController
@@ -26,7 +28,7 @@ public class ItemController {
     @Validated
     public ItemDto add(@RequestHeader(REQUEST_HEADER) Long userId, @Valid @RequestBody ItemDto itemDto) {
 
-        log.info("Income request to add new item.");
+        log.info("POST/addItem");
         return itemService.add(itemDto, userId);
     }
 
@@ -34,40 +36,44 @@ public class ItemController {
     public ItemDto update(@PathVariable Long itemId,
                           @RequestHeader(REQUEST_HEADER) Long userId,
                           @RequestBody ItemDto itemDto) {
-        log.info("Income request to update existed item.");
+        log.info("PATCH/updateItem");
         return itemService.update(itemId, userId, itemDto);
     }
 
     @DeleteMapping("/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@RequestHeader(REQUEST_HEADER) Long userId, @PathVariable Long itemId) {
+    public void delete(@PathVariable Long itemId) {
         itemService.delete(itemId);
-        log.info("Income request to delete existed item.");
+        log.info("DELETE/itemId");
     }
 
     @GetMapping
-    public Collection<ItemDto> getAllByUserId(@RequestHeader(REQUEST_HEADER) Long userId) {
-        log.info("Income request to get all items of user.");
-        return itemService.getAllByUserId(userId);
+    public Collection<ItemDtoWithBookings> getAllByUserId(@RequestHeader(REQUEST_HEADER) Long userId,
+                                              @RequestParam(required = false, defaultValue = "0") @Min(0) int from,
+                                              @RequestParam(required = false, defaultValue = "10") @Min(1) int size) {
+        log.info("GET/get-All-Items-By-UserId");
+        return itemService.getAllByUserId(userId, from, size);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getById(@PathVariable Long itemId, @RequestHeader(REQUEST_HEADER) Long userId) {
-        log.info("Income request to get item by id.");
+    public ItemDtoWithBookings getById(@PathVariable Long itemId, @RequestHeader(REQUEST_HEADER) Long userId) {
+        log.info("GET/get-Item-By-Id");
         return itemService.getById(itemId, userId);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> search(String text) {
-        log.info("Income request to search item by text.");
-        return itemService.search(text);
+    public Collection<ItemDto> search(String text,
+                                      @RequestParam(required = false, defaultValue = "0") @Min(0) int from,
+                                      @RequestParam(required = false, defaultValue = "10") @Min(1) int size) {
+        log.info("GET/searchItem");
+        return itemService.search(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@PathVariable Long itemId,
                                  @RequestHeader(REQUEST_HEADER) Long userId,
                                  @Valid @RequestBody CommentDto commentDto) {
-        log.info("Income request to add comment for item.");
+        log.info("POST/addComment");
         return itemService.addComment(userId, itemId, commentDto);
     }
 }

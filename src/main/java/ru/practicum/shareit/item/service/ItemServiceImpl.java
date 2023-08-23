@@ -3,7 +3,7 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
@@ -15,18 +15,21 @@ import ru.practicum.shareit.exception.NotOwnerException;
 import ru.practicum.shareit.exception.NotSavedException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoWithBookings;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.repository.RequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +41,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final RequestRepository requestRepository;
 
     @Transactional
     @Override
@@ -48,12 +52,17 @@ public class ItemServiceImpl implements ItemService {
         Item item = ItemMapper.mapToItem(itemDto);
         item.setOwner(owner);
 
+        if (itemDto.getRequestId() != null) {
+            requestRepository.findById(itemDto.getRequestId()).orElseThrow(() ->
+                    new NotFoundException("Request id " + itemDto.getRequestId() + " was not found."));
+        }
+
         try {
             itemRepository.save(item);
             log.info("New item id " + item.getId() + " has been saved.");
             return ItemMapper.mapToItemDto(item);
         } catch (DataIntegrityViolationException e) {
-            throw new NotSavedException("Item was not save " + itemDto);
+            throw new NotSavedException("Item was not saved " + itemDto);
         }
     }
 
@@ -96,11 +105,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public Collection<ItemDto> getAllByUserId(Long userId) {
-        Collection<Item> items = itemRepository.findAllByOwnerId(userId, Sort.by(Sort.Direction.ASC, "id"));
+    public Collection<ItemDtoWithBookings> getAllByUserId(Long userId, int from, int size) {
+        Collection<Item> items = itemRepository.findAllByOwnerId(userId, PageRequest.of(from, size));
         log.info("List of all items of user id " + userId + " has been gotten.");
         return items.stream()
                 .map(item -> getById(item.getId(), userId))
+                .sorted(Comparator.comparing(ItemDtoWithBookings::getId))
                 .collect(Collectors.toList());
     }
 
@@ -119,11 +129,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public ItemDto getById(Long itemId, Long userId) {
+    public ItemDtoWithBookings getById(Long itemId, Long userId) {
         Item item = itemRepository.findById(itemId).orElseThrow(() ->
                 new NotFoundException("Item with id " + itemId + " was not found."));
 
-        Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
+        Collection<Comment> comments = commentRepository.findAllByItemId(itemId, PageRequest.of(0, 10));
 
         Booking lastBooking = null;
         Booking nextBooking = null;
@@ -140,13 +150,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public Collection<ItemDto> search(String text) {
+    public Collection<ItemDto> search(String text, int from, int size) {
         if (text.isBlank()) {
             log.info("Search result is empty.");
             return new ArrayList<>();
         } else {
             log.info("Search result has been gotten.");
-            return ItemMapper.mapToItemDto(itemRepository.search(text));
+            return ItemMapper.mapToItemDto(itemRepository.search(text, PageRequest.of(from, size)));
         }
     }
 
@@ -159,7 +169,7 @@ public class ItemServiceImpl implements ItemService {
         User author = userRepository.findById(userId).orElseThrow(() ->
                 new NotFoundException("User id " + userId + " was not found."));
 
-        if (bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now())
+        if (bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now(), PageRequest.of(0, 10))
                 .isEmpty()) {
             throw new NotAvailableException("Cannot comment item you have never booked.");
         }
